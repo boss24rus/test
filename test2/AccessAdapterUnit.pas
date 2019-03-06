@@ -16,6 +16,8 @@ type
     ADOConnection: TADOConnection;
     function getAnswerTabel(Answer:string): TList<string>;
     function getAnswerTabelName: string;
+    function getCorrectTabel(Correct:string): TDictionary<integer, integer>;
+    function getCorrectTabelName: string;
     function getMenu: TList<string>;
     procedure setTest(caption: string);
     function getQuest: TList<string>;
@@ -96,10 +98,42 @@ end;
 
 function AccessAdapter.getCorrect: TDictionary<integer, integer>;
 var
-  ADOQuery: TADOQuery;
   correct: string;
 begin
-  result := TDictionary<integer, integer>.create;
+correct := getCorrectTabelName;
+result:= getCorrectTabel(correct);
+end;
+
+function AccessAdapter.getCorrectTabel(
+  Correct: string): TDictionary<integer, integer>;
+  var
+  ADOQuery: TADOQuery;
+begin
+ result := TDictionary<integer, integer>.create;
+ ADOQuery := TADOQuery.create(nil);
+  with (ADOQuery) do
+  begin
+    Connection := ADOConnection;
+    close;
+    sql.Clear;
+    sql.Add('SELECT quest_id,answer_id FROM ' + correct + ';');
+    open;
+    Active := true;
+  end;
+  //ADOQuery.First;
+  while not ADOQuery.Eof do
+  begin
+    result.Add(StrToInt(ADOQuery.FieldByName('quest_id').AsString),
+      StrToInt(ADOQuery.FieldByName('answer_id').AsString));
+    ADOQuery.Next;
+  end;
+  ADOQuery.Free;
+end;
+
+function AccessAdapter.getCorrectTabelName: string;
+var
+ADOQuery: TADOQuery;
+begin
   ADOQuery := TADOQuery.create(nil);
   with (ADOQuery) do
   begin
@@ -110,23 +144,7 @@ begin
     open;
     Active := true;
   end;
-  ADOQuery.First;
-  correct := ADOQuery.FieldByName('correct').AsString;
-  with (ADOQuery) do
-  begin
-    close;
-    sql.Clear;
-    sql.Add('SELECT quest_id,answer_id FROM ' + correct + ';');
-    open;
-    Active := true;
-  end;
-  ADOQuery.First;
-  while not ADOQuery.Eof do
-  begin
-    result.Add(StrToInt(ADOQuery.FieldByName('quest_id').AsString),
-      StrToInt(ADOQuery.FieldByName('answer_id').AsString));
-    ADOQuery.Next;
-  end;
+  result := ADOQuery.FieldByName('correct').AsString;
   ADOQuery.Free;
 end;
 
@@ -173,6 +191,7 @@ begin
   end;
   ADOQuery.First;
   quest := ADOQuery.FieldByName('quest').AsString;
+
   with (ADOQuery) do
   begin
     close;
