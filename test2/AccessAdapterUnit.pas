@@ -14,6 +14,8 @@ type
   private
     caption: string;
     ADOConnection: TADOConnection;
+    function getAnswerTabel(Answer:string): TList<string>;
+    function getAnswerTabelName: string;
     function getMenu: TList<string>;
     procedure setTest(caption: string);
     function getQuest: TList<string>;
@@ -45,21 +47,20 @@ var
   ADOQuery: TADOQuery;
   answer: string;
 begin
-  result := TList<string>.create;
+  answer := getAnswerTabelName;
+result:= TList<string>.create;
+result:= getAnswerTabel(Answer);
+end;
+
+function AccessAdapter.getAnswerTabel(Answer:string): TList<string>;
+var
+ ADOQuery: TADOQuery;
+begin
+ result := TList<string>.create;
   ADOQuery := TADOQuery.create(nil);
   with (ADOQuery) do
   begin
-    Connection := ADOConnection;
-    close;
-    sql.Clear;
-    sql.Add('SELECT answer FROM Main WHERE caption="' + self.caption + '";');
-    open;
-    Active := true;
-  end;
-  ADOQuery.First;
-  answer := ADOQuery.FieldByName('answer').AsString;
-  with (ADOQuery) do
-  begin
+  Connection := ADOConnection;
     close;
     sql.Clear;
     sql.Add('SELECT caption FROM ' + answer + ';');
@@ -72,6 +73,25 @@ begin
     ADOQuery.Next;
   end;
   ADOQuery.Free;
+end;
+
+function AccessAdapter.getAnswerTabelName: string;
+var
+ ADOQuery: TADOQuery;
+begin
+
+  ADOQuery := TADOQuery.create(nil);
+  with (ADOQuery) do
+  begin
+    Connection := ADOConnection;
+    close;
+    sql.Clear;
+    sql.Add('SELECT answer FROM Main WHERE caption="' + self.caption + '";');
+    open;
+    Active := true;
+  end;
+  ADOQuery.First;
+  result := ADOQuery.FieldByName('answer').AsString;
 end;
 
 function AccessAdapter.getCorrect: TDictionary<integer, integer>;
